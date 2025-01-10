@@ -13,20 +13,26 @@
 #include "get_next_line.h"
 #include <unistd.h>
 
-static char add_to_repo(char *repo, char *buffer)
+static char *add_to_repo(char *repo, char *buffer)
 {
-	int i;
-	int k;
-	
-	k = 0;
-	i = ft_strlen(repo);
-	while(buffer[k])
+	char *new_repo;
+	int repo_len;
+	int buffer_len;
+
+	repo_len = 0;
+	buffer_len = ft_strlen(buffer);
+	if (repo)
+		repo_len = ft_strlen(repo);
+	new_repo = (char *)malloc(repo_len + buffer_len + 1);
+	if (!new_repo)
+		return (NULL);
+	if (repo)
 	{
-		repo[i] = buffer[k];
-		i++;
-		k++;
+		ft_strcpy(new_repo, repo);
+		free(repo);
 	}
-	return (repo);
+	ft_strcpy(new_repo + repo_len, buffer);
+	return(new_repo);
 }
 
 int check_newline(char *repo)
@@ -47,17 +53,26 @@ char *get_line(char *repo)
 {
 	char *line;
 	int i;
-	int k;
-	
+
 	i = 0;
-	k = 0;
-	while (repo[i] && repo[i] == '\n')
+	while (repo[i] && repo[i] != '\n')
 		i++;
-	line = malloc(i + 2);
+	line = (char *)malloc(i + 2);
 	if (!line)
 		return (NULL);
-	while ()
+	ft_strncpy(line, repo, i);
+	line[i] = '\0';
 	return (line);
+}
+
+char *check_and_free_repo(char **repo, int bytes_read)
+{
+	if (repo == NULL || *repo == '\0' || bytes_read == -1)
+	{
+		free(*repo);
+		*repo = NULL;
+	}
+	return (NULL);
 }
 
 char *get_next_line(int fd)
@@ -78,7 +93,10 @@ char *get_next_line(int fd)
 			break;
 		bytes_read = read(fd, buffer, BUFFER_SIZE);
 	}
+	check_and_free_repo(repo, bytes_read);
+	if (bytes_read == 0)
+		return (repo);
 	if (repo && check_newline(repo))
 		line = get_line(repo);
-	
+	return (line);
 }
