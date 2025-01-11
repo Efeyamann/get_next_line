@@ -8,8 +8,7 @@ int main(){
 	char buffer[999];
 
 	fd = open("test.txt", O_RDONLY);
-	read(fd, buffer, 69);
-	printf("%s", buffer);
+	printf("%s", get_next_line(fd));
 	return 0;
 
 }

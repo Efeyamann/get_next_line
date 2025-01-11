@@ -35,21 +35,7 @@ static char *add_to_repo(char *repo, char *buffer)
 	return(new_repo);
 }
 
-int check_newline(char *repo)
-{
-	int i;
-	
-	i = 0;
-	while(repo[i])
-	{
-		if (repo[i] == '\n')
-			return (1);
-		i++;
-	}
-	return (0);
-}
-
-char *get_line(char *repo)
+static char *get_line(char *repo)
 {
 	char *line;
 	int i;
@@ -65,38 +51,63 @@ char *get_line(char *repo)
 	return (line);
 }
 
-char *check_and_free_repo(char **repo, int bytes_read)
+static char *update_repo(char *repo)
 {
-	if (repo == NULL || *repo == '\0' || bytes_read == -1)
+	char	*new_repo;
+	int		i;
+	int		repo_len;
+
+	i = 0;
+	while (repo[i] && repo[i] != '\n')
+		i++;
+	i++;
+	repo_len = ft_strlen(repo + i);
+	new_repo = (char *)malloc(repo_len + 1);
+	if (!new_repo)
 	{
-		free(*repo);
-		*repo = NULL;
+		free(repo);
+		return (NULL);
 	}
-	return (NULL);
+	ft_strcpy(new_repo, repo + i);
+	free(repo);
+	return (new_repo);
+}
+
+int check_newline(char *repo)
+{
+	int i;
+	
+	i = 0;
+	while(repo[i])
+	{
+		if (repo[i] == '\n')
+			return (1);
+		i++;
+	}
+	return (0);
 }
 
 char *get_next_line(int fd)
 {
-	char			buffer[BUFFER_SIZE + 1];
-	static char		*repo = NULL;
-	char			*line = NULL;
-	int				bytes_read;
-	
-	if (fd < 0 || BUFFER_SIZE <= 0 || read(fd, buffer, 0) < 0)
-		return (NULL);
-	bytes_read = read(fd, buffer, BUFFER_SIZE);
-	while (bytes_read > 0)
-	{
-		buffer[bytes_read] = '\0';
-		repo = add_to_repo(repo, buffer);
-		if (check_newline(repo) == 1)
-			break;
-		bytes_read = read(fd, buffer, BUFFER_SIZE);
-	}
-	check_and_free_repo(repo, bytes_read);
-	if (bytes_read == 0)
-		return (repo);
-	if (repo && check_newline(repo))
-		line = get_line(repo);
-	return (line);
+    static char *repo;
+    char buffer[BUFFER_SIZE + 1];
+    char *line;
+    int bytes_read;
+
+    if (fd < 0 || BUFFER_SIZE <= 0 || read(fd, buffer, 0) < 0)
+        return (NULL);
+    while (!check_newline(repo) && (bytes_read = read(fd, buffer, BUFFER_SIZE)) > 0)
+    {
+        buffer[bytes_read] = '\0';
+        repo = add_to_repo(repo, buffer);
+        if (!repo)
+            return (NULL);
+    }
+    if (!repo || !*repo)
+        return (free(repo), repo = NULL, NULL);
+    line = get_line(repo);
+    repo = update_repo(repo);
+	if (!repo)
+		return (free(line), NULL);
+    return (line);
 }

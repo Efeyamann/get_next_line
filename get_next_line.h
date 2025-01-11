@@ -22,5 +22,7 @@
 int     ft_strlen(char *a);
 char    *ft_strcpy(char *dest, const char *src);
 char    *ft_strncpy(char *dest, const char *src, size_t n);
+char    *get_next_line(int fd);
+int     check_newline(char *repo);
 
 #endif
