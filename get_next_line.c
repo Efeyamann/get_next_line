@@ -6,18 +6,18 @@
 /*   By: esir <esir@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/01/06 10:19:37 by esir              #+#    #+#             */
-/*   Updated: 2025/01/06 11:49:31 by esir             ###   ########.fr       */
+/*   Updated: 2025/01/18 15:58:30 by esir             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "get_next_line.h"
 #include <unistd.h>
 
-static char *add_to_repo(char *repo, char *buffer)
+static char	*add_to_repo(char *repo, char *buffer)
 {
-	char *new_repo;
-	int repo_len;
-	int buffer_len;
+	char	*new_repo;
+	int		repo_len;
+	int		buffer_len;
 
 	repo_len = 0;
 	buffer_len = ft_strlen(buffer);
@@ -32,14 +32,16 @@ static char *add_to_repo(char *repo, char *buffer)
 		free(repo);
 	}
 	ft_strcpy(new_repo + repo_len, buffer);
-	return(new_repo);
+	return (new_repo);
 }
 
-static char *get_line(char *repo)
+static char	*get_line(char *repo)
 {
-	char *line;
-	int i;
+	char	*line;
+	int		i;
 
+	if (!repo)
+		return (NULL);
 	i = 0;
 	while (repo[i] && repo[i] != '\n')
 		i++;
@@ -47,67 +49,72 @@ static char *get_line(char *repo)
 	if (!line)
 		return (NULL);
 	ft_strncpy(line, repo, i);
+	if (repo[i] == '\n')
+		line[i++] = '\n';
 	line[i] = '\0';
 	return (line);
 }
 
-static char *update_repo(char *repo)
+static char	*update_repo(char *repo)
 {
 	char	*new_repo;
 	int		i;
-	int		repo_len;
 
 	i = 0;
 	while (repo[i] && repo[i] != '\n')
 		i++;
-	i++;
-	repo_len = ft_strlen(repo + i);
-	new_repo = (char *)malloc(repo_len + 1);
-	if (!new_repo)
+	if (repo[i] == '\n')
+		i++;
+	if (repo[i] == '\0' && !repo[0])
 	{
 		free(repo);
 		return (NULL);
 	}
-	ft_strcpy(new_repo, repo + i);
+	new_repo = ft_strdup(repo + i);
+	if (!new_repo)
+		return (NULL);
 	free(repo);
 	return (new_repo);
 }
 
-int check_newline(char *repo)
+static char	*read_and_store(int fd, char *repo)
 {
-	int i;
-	
-	i = 0;
-	while(repo[i])
+	char	*buffer;
+	int		bytes_read;
+
+	buffer = (char *)malloc(BUFFER_SIZE + 1);
+	if (!buffer)
+		return (NULL);
+	bytes_read = read(fd, buffer, BUFFER_SIZE);
+	while (bytes_read > 0)
 	{
-		if (repo[i] == '\n')
-			return (1);
-		i++;
+		buffer[bytes_read] = '\0';
+		repo = add_to_repo(repo, buffer);
+		if (!repo)
+			return (free(buffer), NULL);
+		bytes_read = read(fd, buffer, BUFFER_SIZE);
 	}
-	return (0);
+	free(buffer);
+	if (bytes_read == -1)
+		return (free(repo), NULL);
+	return (repo);
 }
 
-char *get_next_line(int fd)
+char	*get_next_line(int fd)
 {
-    static char *repo;
-    char buffer[BUFFER_SIZE + 1];
-    char *line;
-    int bytes_read;
+	static char	*repo = NULL;
+	char		*line;
 
-    if (fd < 0 || BUFFER_SIZE <= 0 || read(fd, buffer, 0) < 0)
-        return (NULL);
-    while (!check_newline(repo) && (bytes_read = read(fd, buffer, BUFFER_SIZE)) > 0)
-    {
-        buffer[bytes_read] = '\0';
-        repo = add_to_repo(repo, buffer);
-        if (!repo)
-            return (NULL);
-    }
-    if (!repo || !*repo)
-        return (free(repo), repo = NULL, NULL);
-    line = get_line(repo);
-    repo = update_repo(repo);
+	if (fd < 0 || BUFFER_SIZE <= 0)
+		return (NULL);
+	repo = read_and_store(fd, repo);
+	if (!repo)
+		return (NULL);
+	line = get_line(repo);
+	if (!line)
+		return (free(repo), NULL);
+	repo = update_repo(repo);
 	if (!repo)
 		return (free(line), NULL);
-    return (line);
+	return (line);
 }
