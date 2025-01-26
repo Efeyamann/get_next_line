@@ -6,7 +6,7 @@
 /*   By: esir <esir@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/01/06 10:21:06 by esir              #+#    #+#             */
-/*   Updated: 2025/01/18 15:34:40 by esir             ###   ########.fr       */
+/*   Updated: 2025/01/26 16:17:51 by esir             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -24,20 +24,6 @@ size_t	ft_strlen(char *a)
 		i++;
 	}
 	return (i);
-}
-
-char	*ft_strcpy(char *dest, const char *src)
-{
-	int	i;
-
-	i = 0;
-	while (src[i] != '\0')
-	{
-		dest[i] = src[i];
-		i++;
-	}
-	dest[i] = '\0';
-	return (dest);
 }
 
 char	*ft_strncpy(char *dest, const char *src, size_t n)
@@ -82,18 +68,22 @@ char	*ft_strdup(char *src)
 	return (new);
 }
 
-int	check_newline(char *repo)
+char	*ft_strchr(const char *s, int c)
 {
-	int	i;
+	int				i;
 
-	if (!repo)
-		return (0);
 	i = 0;
-	while (repo && repo[i])
+	while (s[i])
 	{
-		if (repo[i] == '\n')
-			return (1);
+		if (s[i] == (char)c)
+		{
+			return ((char *)&s[i]);
+		}
 		i++;
+	}
+	if ((char)c == '\0')
+	{
+		return ((char *)&s[i]);
 	}
 	return (0);
 }
